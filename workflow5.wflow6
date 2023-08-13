@@ -1,0 +1,143 @@
+#nexus [SplitsTree6]
+
+BEGIN SPLITSTREE6;
+DIMENSIONS nDataNodes=11 nAlgorithms=8;
+PROGRAM version='SplitsTree CE (version 6.0.33-beta, built 27 Jun 2023)';
+WORKFLOW creationDate='1688387487970'; [Mon Jul 03 13:31:27 BST 2023]
+END; [SPLITSTREE6]
+
+BEGIN TAXA;
+TITLE 'Input Taxa';
+LINK ALGORITHM = 'Input Data Loader';
+DIMENSIONS ntax=0;
+TAXLABELS
+;
+[DISPLAYLABELS;]
+[TAXINFO;]
+END; [TAXA]
+
+BEGIN ALGORITHM;
+TITLE 'Taxa Filter';
+LINK ALGORITHM = 'Input Data Loader';
+NAME 'Taxa Filter';
+OPTIONS
+;
+END; [ALGORITHM]
+
+BEGIN TAXA;
+TITLE 'Working Taxa';
+LINK ALGORITHM = 'Taxa Filter';
+DIMENSIONS ntax=0;
+TAXLABELS
+;
+[DISPLAYLABELS;]
+[TAXINFO;]
+END; [TAXA]
+
+BEGIN CHARACTERS;
+TITLE 'Input Characters';
+LINK ALGORITHM = 'Input Data Loader';
+DIMENSIONS ntax=0 nchar=0;
+FORMAT
+	datatype='Unknown' missing=? gap=- labels=left transpose=no interleave=yes;
+MATRIX
+;
+END; [CHARACTERS]
+
+BEGIN ALGORITHM;
+TITLE 'Input Data Filter';
+LINK CHARACTERS = 'Input Characters';
+NAME 'Characters Taxa Filter';
+OPTIONS
+;
+END; [ALGORITHM]
+
+BEGIN CHARACTERS;
+TITLE 'Working Characters';
+LINK ALGORITHM = 'Input Data Filter';
+DIMENSIONS ntax=0 nchar=0;
+FORMAT
+	datatype='Unknown' missing=? gap=- labels=left transpose=no interleave=yes;
+MATRIX
+;
+END; [CHARACTERS]
+
+BEGIN ALGORITHM;
+TITLE 'Hamming Distances';
+LINK CHARACTERS = 'Working Characters';
+NAME 'Hamming Distances';
+OPTIONS
+	Normalize = 'true';
+END; [ALGORITHM]
+
+BEGIN DISTANCES;
+TITLE 'Distances';
+LINK ALGORITHM = 'Hamming Distances';
+DIMENSIONS ntax=0;
+FORMAT labels=left diagonal triangle=Both;
+MATRIX
+;
+END; [DISTANCES]
+
+BEGIN ALGORITHM;
+TITLE 'Neighbor Net';
+LINK DISTANCES = 'Distances';
+NAME 'Neighbor Net';
+OPTIONS
+	InferenceAlgorithm = 'SplitsTree4',
+	CircularOrdering = 'SplitsTree4';
+END; [ALGORITHM]
+
+BEGIN ALGORITHM;
+TITLE 'Neighbor Joining';
+LINK DISTANCES = 'Distances';
+NAME 'Neighbor Joining';
+END; [ALGORITHM]
+
+BEGIN SPLITS;
+TITLE 'Splits';
+LINK ALGORITHM = 'Neighbor Net';
+DIMENSIONS ntax=0 nsplits=0;
+FORMAT labels=no weights=yes confidences=no;
+PROPERTIES fit=-1;
+MATRIX
+;
+END; [SPLITS]
+
+BEGIN TREES;
+TITLE 'Trees';
+LINK ALGORITHM = 'Neighbor Joining';
+TRANSLATE
+;
+[TREES]
+END; [TREES]
+
+BEGIN ALGORITHM;
+TITLE 'Show Splits';
+LINK SPLITS = 'Splits';
+NAME 'Show Splits';
+OPTIONS
+	View = 'SplitsNetwork';
+END; [ALGORITHM]
+
+BEGIN ALGORITHM;
+TITLE 'Show Trees';
+LINK TREES = 'Trees';
+NAME 'Show Trees';
+OPTIONS
+	View = 'TreeView';
+END; [ALGORITHM]
+
+BEGIN VIEW;
+TITLE 'SplitsNetwork';
+LINK ALGORITHM = 'Show Splits';
+NAME 'View';
+INPUT 'SPLITS';
+END; [VIEW]
+
+BEGIN VIEW;
+TITLE 'TreeView';
+LINK ALGORITHM = 'Show Trees';
+NAME 'View';
+INPUT 'TREES';
+END; [VIEW]
